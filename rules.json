@@ -170,5 +170,16 @@
         }
       }
     }
+  },
+  {
+    "id": 14,
+    "priority": 2,
+    "action": {
+      "type": "allow"
+    },
+    "condition": {
+      "regexFilter": "^https://www\\.reddit\\.com/.*[?&]old_reddit_redirect=1([&#].*)?$",
+      "resourceTypes": ["main_frame"]
+    }
   }
 ]

@@ -1,7 +1,7 @@
 {
   "name": "Old Reddit Redirect",
   "description": "Ensure Reddit always loads the old design",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "manifest_version": 3,
   "browser_specific_settings": {
     "gecko_android": {},
@@ -21,7 +21,12 @@
   "content_scripts": [
     {
       "matches": ["https://old.reddit.com/*"],
-      "css": ["styles.css"]
+      "css": ["styles.css"],
+      "js": ["bootstrap.js"]
+    },
+    {
+      "matches": ["https://www.reddit.com/*"],
+      "js": ["bootstrap.js"]
     }
   ],
   "permissions": ["declarativeNetRequestWithHostAccess"],
