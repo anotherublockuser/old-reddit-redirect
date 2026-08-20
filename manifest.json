@@ -7,7 +7,12 @@
     "gecko_android": {},
     "gecko": {
       "id": "{9063c2e9-e07c-4c2c-9646-cfe7ca8d0498}",
-      "strict_min_version": "133.0"
+      "strict_min_version": "133.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "icons": {
