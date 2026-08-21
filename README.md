@@ -1,34 +1,22 @@
 # Old Reddit Redirect
 
 > [!NOTE]  
-> If you're wondering why the extension recently requested new permissions, please see https://github.com/tom-james-watson/old-reddit-redirect/issues/117
+> Wondering why the extension permissions changed recently? Version 3.0.0 has been rewritten from scratch to keep old Reddit working while logged out. The way it works has changed and so its permissions needed to too.
 
 [Chrome extension](https://chrome.google.com/webstore/detail/old-reddit-redirect/dneaehbmnbhcippjikoajpoabadpodje)
 
 [Firefox extension](https://addons.mozilla.org/firefox/addon/old-reddit-redirect)
 
-Dislike Reddit's redesign? Old Reddit Redirect will ensure that you always load the old (old.reddit.com) design instead.
+Dislike Reddit's redesign? Old Reddit Redirect will ensure that you always load the old design instead.
 
-Will force all reddit.com usage to old.reddit.com. Will work when navigating to the site, opening links, using old bookmarks. Works regardless of whether you are logged in or not, and in incognito mode.
+Reddit now requires an account to use `old.reddit.com`. So instead of sending you there, the extension opts you out of the redesign, which makes `www.reddit.com` serve the old design itself. Works when navigating to the site, opening links, using old bookmarks. Works regardless of whether you are logged in or not, and in incognito mode.
+
+Click the extension's icon to switch between old and new Reddit.
 
 Also has a few minor fixes and quality of life improvements like:
 
 - Removing the undismissable cookie banner
-- Rewriting links to galleries to the raw old reddit comments page
-
-#### Redirected domains
-
-- `reddit.com`
-- `www.reddit.com`
-- `np.reddit.com`
-- `amp.reddit.com`
-- `i.reddit.com`
-- `i.redd.it`
-- `preview.redd.it`
-
-#### Whitelisted domains
-
-- `sh.reddit.com`
+- Allow image URLs to be viewed as raw image files
 
 ## Development
 
