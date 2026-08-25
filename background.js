@@ -60,18 +60,22 @@ const withStore = (details, storeId) =>
 
 // Reddit serves old reddit on www.reddit.com to anyone opted out of the
 // redesign. This cookie is how the extension works.
-const setOptOutCookie = async () => {
+const setOptOutCookie = async (storeIds) => {
     const expirationDate = Math.floor(Date.now() / 1000) + twoYearsInSeconds;
+    let written = false;
 
-    for (const storeId of await cookieStoreIds()) {
+    for (const storeId of storeIds ?? (await cookieStoreIds())) {
         try {
             await api.cookies.set(
                 withStore({ ...cookie, expirationDate }, storeId),
             );
+            written = true;
         } catch (e) {
             console.warn("failed to set opt-out cookie", e);
         }
     }
+
+    return written;
 };
 
 const removeOptOutCookie = async () => {
@@ -125,6 +129,33 @@ const isRedditTab = (tab) => {
         return false;
     }
 };
+
+api.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    if (
+        changeInfo.status !== "loading" ||
+        !isRedditTab(tab) ||
+        !(await isEnabled())
+    ) {
+        return;
+    }
+
+    try {
+        const store = withStore(
+            { url: cookie.url, name: cookie.name },
+            tab.cookieStoreId,
+        );
+        const current = await api.cookies.get(store);
+        if (current?.value === cookie.value) {
+            return;
+        }
+
+        if (await setOptOutCookie([tab.cookieStoreId])) {
+            await api.tabs.reload(tabId);
+        }
+    } catch (e) {
+        console.warn("failed to reload tab after restoring cookie", e);
+    }
+});
 
 api.action.onClicked.addListener(async (tab) => {
     // Permission prompts need a click on a page, not on the toolbar.
