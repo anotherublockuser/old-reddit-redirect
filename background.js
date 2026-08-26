@@ -60,22 +60,24 @@ const withStore = (details, storeId) =>
 
 // Reddit serves old reddit on www.reddit.com to anyone opted out of the
 // redesign. This cookie is how the extension works.
-const setOptOutCookie = async (storeIds) => {
+const setOptOutCookieInStore = async (storeId) => {
     const expirationDate = Math.floor(Date.now() / 1000) + twoYearsInSeconds;
-    let written = false;
 
-    for (const storeId of storeIds ?? (await cookieStoreIds())) {
-        try {
-            await api.cookies.set(
-                withStore({ ...cookie, expirationDate }, storeId),
-            );
-            written = true;
-        } catch (e) {
-            console.warn("failed to set opt-out cookie", e);
-        }
+    try {
+        await api.cookies.set(
+            withStore({ ...cookie, expirationDate }, storeId),
+        );
+        return true;
+    } catch (e) {
+        console.warn("failed to set opt-out cookie", e);
+        return false;
     }
+};
 
-    return written;
+const setOptOutCookie = async () => {
+    for (const storeId of await cookieStoreIds()) {
+        await setOptOutCookieInStore(storeId);
+    }
 };
 
 const removeOptOutCookie = async () => {
@@ -130,10 +132,15 @@ const isRedditTab = (tab) => {
     }
 };
 
+const isFirefoxContainerTab = (tab) =>
+    tab.cookieStoreId?.startsWith("firefox-container-");
+
 api.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (
         changeInfo.status !== "loading" ||
+        !isFirefoxContainerTab(tab) ||
         !isRedditTab(tab) ||
+        !(await hasAccess()) ||
         !(await isEnabled())
     ) {
         return;
@@ -149,11 +156,11 @@ api.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             return;
         }
 
-        if (await setOptOutCookie([tab.cookieStoreId])) {
+        if (await setOptOutCookieInStore(tab.cookieStoreId)) {
             await api.tabs.reload(tabId);
         }
     } catch (e) {
-        console.warn("failed to reload tab after restoring cookie", e);
+        console.warn("failed to restore opt-out cookie for tab", e);
     }
 });
 
