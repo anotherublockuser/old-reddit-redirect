@@ -41,8 +41,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.reddit.com/*",
-        "https://old.reddit.com/*"
+        "*://*.reddit.com/*"
       ],
       "css": [
         "styles.css"
