@@ -132,13 +132,9 @@ const isRedditTab = (tab) => {
     }
 };
 
-const isFirefoxContainerTab = (tab) =>
-    tab.cookieStoreId?.startsWith("firefox-container-");
-
 api.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (
         changeInfo.status !== "loading" ||
-        !isFirefoxContainerTab(tab) ||
         !isRedditTab(tab) ||
         !(await hasAccess()) ||
         !(await isEnabled())
