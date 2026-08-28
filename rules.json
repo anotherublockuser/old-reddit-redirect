@@ -18,12 +18,15 @@
       "type": "redirect",
       "redirect": {
         "transform": {
-          "host": "www.reddit.com"
+          "host": "www.reddit.com",
+          "queryTransform": {
+            "removeParams": ["tl"]
+          }
         }
       }
     },
     "condition": {
-      "regexFilter": "^https://old\\.reddit\\.com/",
+      "regexFilter": "^https://(?:www|old)\\.reddit\\.com/",
       "resourceTypes": ["main_frame"]
     }
   }
