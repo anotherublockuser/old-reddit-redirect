@@ -7,7 +7,7 @@
       "requestHeaders": [{ "header": "Accept", "operation": "remove" }]
     },
     "condition": {
-      "regexFilter": "^https://(i|preview).redd.it/*",
+      "regexFilter": "^https://(?:i|preview)\\.redd\\.it/",
       "resourceTypes": ["main_frame"]
     }
   },
