@@ -4,7 +4,7 @@ const cookie = {
     url: "https://www.reddit.com/",
     name: "redesign_optout",
     value: "true",
-    domain: ".reddit.com",
+    domain: "reddit.com",
     path: "/",
     secure: true,
     sameSite: "lax",
