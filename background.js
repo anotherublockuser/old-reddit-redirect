@@ -69,8 +69,19 @@ const setOptOutCookieInStore = async (storeId) => {
         );
         return true;
     } catch (e) {
-        console.warn("failed to set opt-out cookie", e);
-        return false;
+        try {
+            // FPI could be on, set firstPartyDomain.
+            cookie.firstPartyDomain = cookie.domain;
+            await api.cookies.set(
+                withStore({ ...cookie, expirationDate }, storeId),
+            );
+            return true;
+        } catch (e) {
+            // Nope, that did not fix it. Revert.
+            cookie.firstPartyDomain = undefined;
+            console.warn("failed to set opt-out cookie", e);
+            return false;
+        }
     }
 };
 
@@ -81,10 +92,11 @@ const setOptOutCookie = async () => {
 };
 
 const removeOptOutCookie = async () => {
+    const { url, name, firstPartyDomain } = cookie;
     for (const storeId of await cookieStoreIds()) {
         try {
             await api.cookies.remove(
-                withStore({ url: cookie.url, name: cookie.name }, storeId),
+                withStore({ url, name, firstPartyDomain }, storeId),
             );
         } catch (e) {
             console.warn("failed to remove opt-out cookie", e);
@@ -143,8 +155,9 @@ api.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
 
     try {
+        const { url, name, firstPartyDomain } = cookie;
         const store = withStore(
-            { url: cookie.url, name: cookie.name },
+            { url, name, firstPartyDomain },
             tab.cookieStoreId,
         );
         const current = await api.cookies.get(store);
