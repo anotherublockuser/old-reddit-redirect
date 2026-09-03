@@ -1,16 +1,19 @@
-.PHONY: run run-isolated clean
+.PHONY: run run-isolated clean purge install
 
-old-reddit-redirect.zip: *.json *.js *.html *.css img/* *.txt
-	zip -r old-reddit-redirect.zip * -x .git/* -x img/screenshot.png -x .gitignore -x Makefile -x _metadata/** -x "_metadata/*"
+old-reddit-redirect.zip:
+	cp LICENSE.txt extension/dist/
+	trap 'rm -f LICENSE.txt' EXIT; \
+	cd extension/dist && zip -r ../../old-reddit-redirect.zip .
+
 
 run:
-	npx web-ext run \
+	./node_modules/.bin/web-ext run \
 		--start-url www.reddit.com \
 		--devtools \
 		--pref devtools.toolbox.selectedTool=webconsole
 
 run-isolated:
-	npx web-ext run \
+	./node_modules/.bin/web-ext run \
 		--start-url www.reddit.com \
 		--devtools \
 		--pref devtools.toolbox.selectedTool=webconsole \
@@ -20,3 +23,9 @@ run-isolated:
 
 clean:
 	rm -f *.zip
+
+purge:
+	rm -rf node_modules
+
+install:
+	npm install --no-audit
