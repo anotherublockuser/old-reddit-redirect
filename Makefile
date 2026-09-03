@@ -1,10 +1,9 @@
-.PHONY: run run-isolated clean purge install
+.PHONY: build run run-isolated clean purge install
 
-old-reddit-redirect.zip:
+build:
 	cp LICENSE.txt extension/dist/
-	trap 'rm -f LICENSE.txt' EXIT; \
-	cd extension/dist && zip -r ../../old-reddit-redirect.zip .
-
+	trap 'rm -f ./extension/dist/LICENSE.txt' EXIT; \
+	./node_modules/.bin/web-ext build
 
 run:
 	./node_modules/.bin/web-ext run \
@@ -22,7 +21,7 @@ run-isolated:
 		--pref privacy.userContext.ui.enabled=true
 
 clean:
-	rm -f *.zip
+	rm -rf artifacts
 
 purge:
 	rm -rf node_modules

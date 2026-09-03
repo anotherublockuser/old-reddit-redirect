@@ -3,6 +3,10 @@
     "web-ext": "10.6.0"
   },
   "webExt": {
-    "sourceDir": "extension/dist"
+    "sourceDir": "extension/dist",
+    "artifactsDir": "artifacts",
+    "build": {
+      "overwriteDest": true
+    }
   }
 }

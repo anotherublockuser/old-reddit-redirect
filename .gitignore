@@ -3,3 +3,4 @@ _metadata
 *.zip
 .DS_Store
 node_modules
+artifacts
