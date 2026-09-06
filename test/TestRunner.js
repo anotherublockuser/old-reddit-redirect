@@ -1,6 +1,7 @@
 import EventEmitter from "node:events";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { spawn } from "node:child_process";
 
 import webExt from "web-ext";
 import pkg from "../package.json" with { type: "json" };
@@ -19,6 +20,7 @@ class TestRunner extends EventEmitter {
 
     #isShuttingDown;
     #extensionRunner;
+    #chromedriver;
 
     #session;
     #browserContexts = [];
@@ -72,7 +74,11 @@ class TestRunner extends EventEmitter {
 
     start = async () => {
         this.addListener("error", this.#handleError);
-        await this.#startFirefox();
+        if (this.#options?.target === "chromium") {
+            await this.#startChromium();
+        } else {
+            await this.#startFirefox();
+        }
         await this.createBrowserContext();
     }
 
@@ -135,7 +141,13 @@ class TestRunner extends EventEmitter {
                 });
             }
         } finally {
-            await this.#extensionRunner?.exit();
+            if (this.#options?.target === "chromium") {
+                this.#chromedriver.kill();
+                // For some reason this.#extensionRunner.exit() is inaccessible here
+                process.exit();
+            } else {
+                this.#extensionRunner.exit();
+            }
         }
     }
 
@@ -164,6 +176,113 @@ class TestRunner extends EventEmitter {
         });
 
         this.#session = result.sessionId;
+    }
+
+    #startChromium = async () => {
+        const chromiumBinary = process.env.CHROME_BIN
+        const params = [
+            {
+                ...this.#webExtCliOpts,
+                chromiumBinary,
+                args: [
+                    "--remote-debugging-port=9222",
+                ]
+            },
+            this.#webExtNodeOpts
+        ];
+
+        await new Promise(resolve => {
+            this.#extensionRunner = webExt.cmd.run(...params);
+            setTimeout(resolve, 500);
+        });
+
+        // Chromium doesn't expose a BiDi WebSocket, we need chromedriver to connect
+        const startChromeDriver = async () => {
+            const driverBin = process.env.CHROMEDRIVER_BIN;
+            if (!driverBin) {
+                throw new Error("CHROMEDRIVER_BIN environment variable is required");
+            }
+
+            this.#chromedriver = spawn(driverBin, [
+                "--port=35135",
+            ]);
+
+            this.#chromedriver.on("error", (error) => {
+                this.emit("error", new Error("ChromeDriver failed to start:", error));
+            });
+
+            this.#chromedriver.on("exit", () => {
+                if (this.#isShuttingDown) {
+                    return;
+                }
+                this.emit("error", new Error("ChromeDriver exited unexpectedly"));
+            });
+
+            return new Promise((resolve, reject) => {
+                const poll = async () => {
+                    if (this.#chromedriver.exitCode !== null) {
+                        reject();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(
+                            "http://127.0.0.1:35135/status"
+                        );
+
+                        if (response.ok) {
+                            const body = await response.json();
+                            if (!body?.value?.ready) {
+                                this.emit("error", new Error(
+                                    "ChromeDriver is not ready", {
+                                    cause: body
+                                }));
+                                reject();
+                                return;
+                            }
+                            resolve();
+                            return;
+                        }
+                    } catch {
+                        // ChromeDriver isn't listening yet
+                    }
+
+                    setTimeout(poll, 100);
+                };
+
+                poll();
+            });
+        }
+
+        await startChromeDriver();
+    
+        // Chromedriver by default does not expose a WebSocket, we need to create a session over http first
+        const response = await fetch("http://127.0.0.1:35135/session", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                capabilities: {
+                    alwaysMatch: {
+                        browserName: "chrome",
+                        "goog:chromeOptions": {
+                            debuggerAddress: "127.0.0.1:9222",
+                        },
+                        webSocketUrl: true,
+                    },
+                },
+            }),
+        });
+
+        const body = await response.json();
+
+        const wsUrl = body?.value?.capabilities?.webSocketUrl;
+        if (!response.ok || !wsUrl) {
+            this.emit("error", new Error("Could not establish ChromeDriver session"));
+        }
+
+        await this.#connectWebsocket(wsUrl);
     }
 
     #connectWebsocket = async (url) => {
@@ -262,6 +381,7 @@ class TestRunner extends EventEmitter {
     }
 
     #handleError = async (error) => {
+        console.error("handleError", error);
         // Catch errors thrown in event handlers
         try {
             for (const { reject } of Object.values(this.#pendingCommands)) {
