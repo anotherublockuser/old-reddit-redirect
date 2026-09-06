@@ -32,3 +32,4 @@ install:
 test:
 	ORR_URL=https://www.reddit.com node ./test/test-title.js 
 	ORR_URL=https://old.reddit.com node ./test/test-title.js 
+	ORR_URL=https://www.reddit.com ORR_OPTS_FILE=firefox-fpi.json node ./test/test-title.js
