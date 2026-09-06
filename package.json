@@ -1,6 +1,8 @@
 {
+  "type": "module",
   "devDependencies": {
-    "web-ext": "10.6.0"
+    "web-ext": "10.6.0",
+    "webdriver-bidi-protocol": "0.4.3"
   },
   "webExt": {
     "sourceDir": "extension/dist",
@@ -8,5 +10,8 @@
     "build": {
       "overwriteDest": true
     }
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
