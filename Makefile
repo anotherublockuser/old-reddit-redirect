@@ -1,4 +1,4 @@
-.PHONY: build run run-isolated clean purge install
+.PHONY: build run run-isolated clean purge install test
 
 build:
 	cp LICENSE.txt extension/dist/
@@ -28,3 +28,7 @@ purge:
 
 install:
 	npm install --no-audit
+
+test:
+	ORR_URL=https://www.reddit.com node ./test/test-title.js 
+	ORR_URL=https://old.reddit.com node ./test/test-title.js 
